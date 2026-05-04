@@ -4,6 +4,7 @@ from typing import Annotated, Optional
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Field, Relationship, Session, SQLModel, col, create_engine, or_, select
+from sqlalchemy import and_
 
 
 # ============================================================================
@@ -12,14 +13,14 @@ from sqlmodel import Field, Relationship, Session, SQLModel, col, create_engine,
 
 class NoteTag(SQLModel, table=True):
     """Association table for the many-to-many relationship between Note and Tag."""
-    __tablename__ = "note_tag"
+    __tablename__ = "note_tag"  # type: ignore[assignment]
 
     note_id: Optional[int] = Field(default=None, foreign_key="notes.id", primary_key=True)
     tag_id: Optional[int] = Field(default=None, foreign_key="tags.id", primary_key=True)
 
 
 class Note(SQLModel, table=True):
-    __tablename__ = "notes"
+    __tablename__ = "notes"  # type: ignore[assignment]
 
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str
@@ -31,7 +32,7 @@ class Note(SQLModel, table=True):
 
 
 class Tag(SQLModel, table=True):
-    __tablename__ = "tags"
+    __tablename__ = "tags"  # type: ignore[assignment]
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, index=True)
@@ -113,7 +114,7 @@ def get_or_create_tags(tag_names: list[str], session: Session) -> list[Tag]:
 
 def note_to_response(note: Note) -> NoteResponse:
     return NoteResponse(
-        id=note.id,
+        id=note.id or 0,
         title=note.title,
         content=note.content,
         category=note.category,
@@ -195,9 +196,9 @@ def create_note(note: NoteCreate, session: SessionDep) -> NoteResponse:
 @app.get("/notes")
 def list_notes(
     session: SessionDep,
-    category: str = None,
-    search: str = None,
-    tag: str = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    tag: Optional[str] = None,
 ) -> list[NoteResponse]:
     """List notes with optional filters (category, search text, tag)."""
     statement = select(Note)
@@ -215,7 +216,13 @@ def list_notes(
         )
 
     if tag:
-        statement = statement.join(Note.tags).where(Tag.name == tag.lower())
+        tag_lower = tag.lower()
+        statement = (
+            statement
+            .join(NoteTag, col(NoteTag.note_id) == col(Note.id))  # type: ignore[arg-type]
+            .join(Tag, col(Tag.id) == col(NoteTag.tag_id))  # type: ignore[arg-type]
+            .where(col(Tag.name) == tag_lower)
+        )
 
     notes = session.exec(statement).all()
     return [note_to_response(n) for n in notes]

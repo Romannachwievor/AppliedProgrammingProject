@@ -154,7 +154,7 @@ JSON-Storage durch Datenbanklogik ersetzen (Session, commit, refresh)
 ---
 
 #### 3. 💡 How did I overcome them?
-
+Nils gefragt 👍
 
 
 
@@ -168,10 +168,13 @@ JSON-Storage durch Datenbanklogik ersetzen (Session, commit, refresh)
 
 #### 1. ✅ What did I accomplish?
 test_day4.py und main_day4.py erstellt
-pytest und requests installiert
-Test gegen laufenden Server ausgeführt 1/1 passed
-test_day4.py erweitert: 3/3 passed
-faker importiert
+pytest, requests und Faker installiert
+Erster Test gegen laufenden Server ausgeführt: 1/1 passed
+test_day4.py erweitert (3/3 passed): test_greetings (Faker-Loop x10), test_is_adult (range 0–40, alle Felder geprüft), test_is_adult_negative_age
+Validierung für negative Altersangaben in main_day4.py ergänzt (400 Bad Request)
+test_notes.py erstellt: 17 Tests für Notes API (CRUD, Filter, Fehlerbehandlung, Day-3-Features)
+Pylance-Typfehler in main.py behoben (Optional, type: ignore, col()-Join)
+Code auf GitHub gepusht
 
 ---
 
@@ -180,16 +183,22 @@ test_day4.py lief nicht
 requests-Modul fehlte
 Dateien waren nicht gespeichert (0 Bytes auf Festplatte)
 Server und Tests brauchen zwei separate Terminals
+Einrückungsfehler in test_is_adult (6 statt 8 Leerzeichen)
+test_is_adult_negative_age: main_day4.py validierte negative Zahlen nicht → Test failte
+Pylance-Typfehler: str = None, Optional[int] → int, Join mit col()
 
 
 
 ---
 
 #### 3. 💡 How did I overcome them?
-Nicht gespeicherte .py, mit Cmd+S gefixed
-uv add pytest && uv add requests
-falschen Text aus test_day4.py entfernt
+Nicht gespeicherte .py mit Cmd+S gefixed
+uv add pytest && uv add requests && uv add Faker
+Falschen Text aus test_day4.py entfernt
 Server in Terminal 1, pytest in Terminal 2
+Einrückung korrigiert
+HTTPException(400) für negative Altersangaben in main_day4.py ergänzt
+Optional[str] statt str = None für Query-Parameter; col() für SQLModel-Joins; # type: ignore für __tablename__
 
 
 
