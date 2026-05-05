@@ -173,8 +173,7 @@ Erster Test gegen laufenden Server ausgeführt: 1/1 passed
 test_day4.py erweitert (3/3 passed): test_greetings (Faker-Loop x10), test_is_adult (range 0–40, alle Felder geprüft), test_is_adult_negative_age
 Validierung für negative Altersangaben in main_day4.py ergänzt (400 Bad Request)
 test_notes.py erstellt: 17 Tests für Notes API (CRUD, Filter, Fehlerbehandlung, Day-3-Features)
-Pylance-Typfehler in main.py behoben (Optional, type: ignore, col()-Join)
-Code auf GitHub gepusht
+Pylance-Typfehler in main.py behoben (Problem in Workspace erkannt und von Copilot fixen lassen)
 
 ---
 
@@ -183,9 +182,9 @@ test_day4.py lief nicht
 requests-Modul fehlte
 Dateien waren nicht gespeichert (0 Bytes auf Festplatte)
 Server und Tests brauchen zwei separate Terminals
-Einrückungsfehler in test_is_adult (6 statt 8 Leerzeichen)
-test_is_adult_negative_age: main_day4.py validierte negative Zahlen nicht → Test failte
-Pylance-Typfehler: str = None, Optional[int] → int, Join mit col()
+Einrückungsfehler in test_is_adult
+test_is_adult_negative_age: main_day4.py validierte negative Zahlen nicht Test failte (Sinnvolle Ergänzung?)
+Pylance-Typfehler: str = None, Optional[int] -> int, Join mit col()
 
 
 
