@@ -239,29 +239,33 @@ Alle Testkategorien konsistent auf `ALLOWED_CATEGORIES`-Werte umgestellt
 ### Day 6
 
 #### 1. ✅ What did I accomplish?
-
-
-
-
-
+class_based_decorator.py umgesetzt (Class Decorator mit __call__, Logging und Laufzeitmessung)
+Referenz Test Suite aus Day 6 heruntergeladen
+Test Suite ausgeführt und Fehler analysiert
+main.py angepasst, damit die neue Suite läuft: Date Filter created_after und created_before ergänzt
+Top Tags in /notes/stats auf maximal 5 Einträge begrenzt
+Kompatibilitätsdatei main.py im Root ergänzt, damit Start mit main:app funktioniert
+Alle Day 6 Referenztests grün bekommen
+Lokale test_validation.py erneut geprüft und auf aktuellen Stand gebracht
+Serverabhängige Tests robuster gemacht: test_notes.py und test_day4.py skippen, wenn kein passender Server läuft
 
 ---
 
 #### 2. 🚧 What challenges did I face?
-
-
-
-
-
+Neue externe Test Suite hatte andere Erwartungen als Day 5 Regeln
+Viele Failures durch zu strikte work Tag Regel
+Date Filter Parameter fehlten komplett in GET /notes
+pytest -q lokal fehlerhaft, wenn kein Server läuft
+Unterschied zwischen Day 4 Demo API und aktueller Notes API führte zu instabilen Requests Tests
 
 ---
 
 #### 3. 💡 How did I overcome them?
-
-
-
-
-
+Fehlerausgabe aus pytest Schritt für Schritt gelesen und nach Ursachen gruppiert
+API Verhalten an Referenzsuite angepasst (work Tag Regel gelockert, Date Filter ergänzt)
+Endpoints mit erneutem Testlauf validiert bis 70 von 70 Tests bestanden
+test_validation separat gegen In Memory SQLite geprüft, damit frühere Day 5 Funktionen nicht kaputtgehen
+Automatische Skip Regeln in serverabhängigen Testdateien eingebaut, damit Tests ohne laufenden Server nicht fehlschlagen
 
 ---
 

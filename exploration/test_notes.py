@@ -1,6 +1,18 @@
 import requests
+import pytest
 
 BASE_URL = "http://127.0.0.1:8000"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _require_notes_api_server():
+    """Skip module if the notes API server is not reachable."""
+    try:
+        response = requests.get(f"{BASE_URL}/", timeout=2)
+        if response.status_code >= 500:
+            pytest.skip(f"Server at {BASE_URL} returned {response.status_code}")
+    except requests.exceptions.RequestException as exc:
+        pytest.skip(f"Notes API not reachable at {BASE_URL}: {exc}")
 
 # ---------------------------------------------------------------------------
 # Helper

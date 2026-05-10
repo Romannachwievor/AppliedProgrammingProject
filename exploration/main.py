@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Annotated, Optional, Self
+from typing import Annotated, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
-from pydantic import BaseModel, ConfigDict, Field as PydanticField, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field as PydanticField, field_validator
 from sqlmodel import Field, Relationship, Session, SQLModel, col, create_engine, or_, select
 from sqlalchemy import and_
 
@@ -135,14 +135,6 @@ class NoteCreate(BaseModel):
             seen.add(t)
             cleaned.append(t)
         return cleaned
-
-    @model_validator(mode="after")
-    def check_work_tag(self) -> Self:
-        # model_validator because it needs both category and tags
-        if self.category == "work" and "work" not in self.tags:
-            raise ValueError("work notes must include the 'work' tag")
-        return self
-
 
 class NoteResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -298,8 +290,10 @@ def list_notes(
     category: Optional[str] = None,
     search: Optional[str] = None,
     tag: Optional[str] = None,
+    created_after: Optional[datetime] = None,
+    created_before: Optional[datetime] = None,
 ) -> list[NoteResponse]:
-    """List notes with optional filters (category, search text, tag)."""
+    """List notes with optional filters (category, search text, tag, dates)."""
     statement = select(Note)
 
     if category:
@@ -323,6 +317,18 @@ def list_notes(
             .where(col(Tag.name) == tag_lower)
         )
 
+    if created_after is not None and created_before is not None:
+        statement = statement.where(
+            and_(
+                col(Note.created_at) >= created_after,
+                col(Note.created_at) <= created_before,
+            )
+        )
+    elif created_after is not None:
+        statement = statement.where(col(Note.created_at) >= created_after)
+    elif created_before is not None:
+        statement = statement.where(col(Note.created_at) <= created_before)
+
     notes = session.exec(statement).all()
     return [note_to_response(n) for n in notes]
 
@@ -343,7 +349,7 @@ def get_notes_stats(session: SessionDep):
     top_tags = [
         {"tag": name, "count": count}
         for name, count in sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)
-    ]
+    ][:5]
 
     return {
         "total_notes": len(notes),

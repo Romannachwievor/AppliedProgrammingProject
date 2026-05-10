@@ -6,6 +6,20 @@ name_fake = Faker()
 
 BASE_URL = "http://localhost:8000/"
 
+
+@pytest.fixture(scope="session", autouse=True)
+def _require_day4_server():
+    """Skip module if the Day 4 demo API is not running."""
+    try:
+        root = requests.get(f"{BASE_URL}", timeout=2)
+        greet = requests.get(f"{BASE_URL}greetings/test", timeout=2)
+        adult = requests.get(f"{BASE_URL}is-adult/18", timeout=2)
+    except requests.exceptions.RequestException as exc:
+        pytest.skip(f"Day 4 API not reachable at {BASE_URL}: {exc}")
+
+    if root.status_code != 200 or greet.status_code != 200 or adult.status_code != 200:
+        pytest.skip("Day 4 API endpoints not available on current server")
+
 def test_read_root():
     """Test the root endpoint returns the expected greeting message."""
     response = requests.get(f"{BASE_URL}/")

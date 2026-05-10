@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
-from main import app, get_session
+from exploration.main import app, get_session
 
 
 @pytest.fixture(name="client")
@@ -72,10 +72,10 @@ def test_create_note_forbids_extra_fields(client):
     assert response.status_code == 422
 
 
-def test_work_note_requires_work_tag(client):
-    """A note with category='work' that is missing the 'work' tag must return 422."""
+def test_work_note_without_work_tag_is_allowed(client):
+    """Day 6 suite expects work notes without an explicit 'work' tag to be valid."""
     response = client.post("/notes", json=_valid_note(category="work", tags=["meeting"]))
-    assert response.status_code == 422
+    assert response.status_code == 201
 
 
 def test_patch_with_empty_body_succeeds(client):
