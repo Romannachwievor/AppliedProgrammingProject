@@ -9,7 +9,7 @@ BASE_URL = "http://127.0.0.1:8000"
 def create_test_note(
     title="Test Note",
     content="Test content",
-    category="Testing",
+    category="general",
     tags=None,
 ):
     """Create a note and return the response JSON. Asserts 201."""
@@ -29,12 +29,12 @@ def create_test_note(
 
 def test_create_note():
     """Test creating a new note returns 201 with correct fields."""
-    data = create_test_note(title="My Note", category="Work", tags=["important"])
+    data = create_test_note(title="My Note", category="work", tags=["important"])
 
     assert "id" in data
     assert "created_at" in data
     assert data["title"] == "My Note"
-    assert data["category"] == "Work"
+    assert data["category"] == "work"
     assert "important" in data["tags"]
 
 
@@ -66,7 +66,7 @@ def test_update_note():
     updated_data = {
         "title": "Updated Title",
         "content": "Updated content",
-        "category": "Updated",
+        "category": "personal",
         "tags": ["updated"],
     }
     response = requests.put(f"{BASE_URL}/notes/{note_id}", json=updated_data)
@@ -74,7 +74,7 @@ def test_update_note():
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Updated Title"
-    assert data["category"] == "Updated"
+    assert data["category"] == "personal"
     assert "updated" in data["tags"]
 
 
@@ -97,16 +97,16 @@ def test_delete_note():
 
 def test_filter_by_category():
     """Test ?category= returns only notes with that category."""
-    create_test_note(title="Work Note 1", category="FilterWork", tags=[])
-    create_test_note(title="Work Note 2", category="FilterWork", tags=[])
+    create_test_note(title="Work Note 1", category="ideas", tags=[])
+    create_test_note(title="Work Note 2", category="ideas", tags=[])
 
-    response = requests.get(f"{BASE_URL}/notes?category=FilterWork")
+    response = requests.get(f"{BASE_URL}/notes?category=ideas")
 
     assert response.status_code == 200
     notes = response.json()
     assert len(notes) >= 2
     for note in notes:
-        assert note["category"] == "FilterWork"
+        assert note["category"] == "ideas"
 
 
 def test_filter_by_search():
@@ -114,7 +114,7 @@ def test_filter_by_search():
     create_test_note(
         title="Unique Search Term XYZ123",
         content="Some content",
-        category="Search",
+        category="general",
         tags=[],
     )
 
@@ -130,7 +130,7 @@ def test_filter_by_search():
 
 def test_filter_by_tag():
     """Test ?tag= returns only notes with that tag."""
-    create_test_note(title="Tagged Note", category="Tagging", tags=["uniquetag999"])
+    create_test_note(title="Tagged Note", category="general", tags=["uniquetag999"])
 
     response = requests.get(f"{BASE_URL}/notes?tag=uniquetag999")
 
@@ -145,19 +145,19 @@ def test_combined_filters():
     """Test combining category + tag filters together."""
     create_test_note(
         title="Combined Filter Note",
-        category="CombinedCat",
+        category="personal",
         tags=["combinedtag"],
     )
 
     response = requests.get(
-        f"{BASE_URL}/notes?category=CombinedCat&tag=combinedtag"
+        f"{BASE_URL}/notes?category=personal&tag=combinedtag"
     )
 
     assert response.status_code == 200
     notes = response.json()
     assert len(notes) >= 1
     for note in notes:
-        assert note["category"] == "CombinedCat"
+        assert note["category"] == "personal"
         assert "combinedtag" in note["tags"]
 
 
@@ -187,7 +187,7 @@ def test_update_nonexistent_note():
     """Test PUT /notes/99999 returns 404."""
     response = requests.put(
         f"{BASE_URL}/notes/99999",
-        json={"title": "X", "content": "X", "category": "X", "tags": []},
+        json={"title": "Update Nonexistent", "content": "Some content", "category": "general", "tags": []},
     )
 
     assert response.status_code == 404
@@ -206,7 +206,7 @@ def test_delete_nonexistent_note():
 
 def test_notes_statistics():
     """Test GET /notes/stats returns expected fields."""
-    create_test_note(title="Stats Note", category="StatsCategory", tags=["statstag"])
+    create_test_note(title="Stats Note", category="ideas", tags=["statstag"])
 
     response = requests.get(f"{BASE_URL}/notes/stats")
 
@@ -222,7 +222,7 @@ def test_notes_statistics():
 def test_patch_note_title_only():
     """Test PATCH /notes/{id} updates only the title, leaves other fields intact."""
     created = create_test_note(
-        title="Original", content="Keep this", category="KeepCat", tags=["keeptag"]
+        title="Original", content="Keep this", category="personal", tags=["keeptag"]
     )
     note_id = created["id"]
 
@@ -234,20 +234,20 @@ def test_patch_note_title_only():
     data = response.json()
     assert data["title"] == "Patched Title"
     assert data["content"] == "Keep this"
-    assert data["category"] == "KeepCat"
+    assert data["category"] == "personal"
     assert "keeptag" in data["tags"]
 
 
 def test_list_categories():
     """Test GET /categories returns a sorted list of strings."""
-    create_test_note(title="Cat Note", category="CategoryEndpointTest", tags=[])
+    create_test_note(title="Cat Note", category="school", tags=[])
 
     response = requests.get(f"{BASE_URL}/categories")
 
     assert response.status_code == 200
     categories = response.json()
     assert isinstance(categories, list)
-    assert "CategoryEndpointTest" in categories
+    assert "school" in categories
 
 
 def test_notes_by_category_endpoint():

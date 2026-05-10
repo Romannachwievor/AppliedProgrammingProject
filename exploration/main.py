@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Self
 
 from fastapi import Depends, FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field as PydanticField, field_validator, model_validator
 from sqlmodel import Field, Relationship, Session, SQLModel, col, create_engine, or_, select
 from sqlalchemy import and_
 
@@ -39,6 +39,17 @@ class Tag(SQLModel, table=True):
 
     notes: list[Note] = Relationship(back_populates="tags", link_model=NoteTag)
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        if isinstance(value, str):
+            value = value.strip().lower()
+            if len(value) < 2 or len(value) > 30:
+                raise ValueError("tag name must be 2–30 characters")
+            if not all(c.isalnum() or c == "-" for c in value):
+                raise ValueError("tag name must contain only lowercase letters, digits, and dashes")
+        return value
+
 
 # ============================================================================
 # DATABASE SETUP
@@ -60,14 +71,82 @@ SessionDep = Annotated[Session, Depends(get_session)]
 # PYDANTIC MODELS (API input / output)
 # ============================================================================
 
+ALLOWED_CATEGORIES = {"work", "personal", "school", "ideas", "general"}
+
+
 class NoteCreate(BaseModel):
-    title: str
-    content: str
-    category: str
-    tags: list[str] = []
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    title: str = PydanticField(
+        min_length=3,
+        max_length=100,
+        description="Short note title shown in lists",
+        examples=["Shopping list", "Meeting prep"],
+    )
+    content: str = PydanticField(
+        min_length=1,
+        max_length=10_000,
+        description="Main body of the note",
+    )
+    category: str = PydanticField(
+        min_length=2,
+        max_length=30,
+        pattern=r"^[a-z]+$",
+        description="Lowercase category, e.g. work, personal, school",
+        examples=["work"],
+    )
+    tags: list[str] = PydanticField(
+        default_factory=list,
+        max_length=10,
+        description="List of tags (max 10)",
+    )
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str) -> str:
+        if not value:
+            raise ValueError("title must not be empty or whitespace only")
+        return value
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def validate_category(cls, value: str) -> str:
+        if isinstance(value, str):
+            value = value.strip().lower()
+        if value not in ALLOWED_CATEGORIES:
+            raise ValueError(
+                f"category must be one of {sorted(ALLOWED_CATEGORIES)}"
+            )
+        return value
+
+    @field_validator("tags")
+    @classmethod
+    def clean_tags(cls, raw: list[str]) -> list[str]:
+        cleaned = []
+        seen: set[str] = set()
+        for tag in raw:
+            t = tag.strip().lower()
+            if not t:
+                raise ValueError("tags must not be empty strings")
+            if len(t) < 2:
+                raise ValueError(f"tag '{t}' must be at least 2 characters")
+            if t in seen:
+                continue
+            seen.add(t)
+            cleaned.append(t)
+        return cleaned
+
+    @model_validator(mode="after")
+    def check_work_tag(self) -> Self:
+        # model_validator because it needs both category and tags
+        if self.category == "work" and "work" not in self.tags:
+            raise ValueError("work notes must include the 'work' tag")
+        return self
 
 
 class NoteResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     content: str
@@ -75,20 +154,48 @@ class NoteResponse(BaseModel):
     tags: list[str]
     created_at: str
 
-    class Config:
-        from_attributes = True
-
 
 class NoteUpdate(BaseModel):
-    title: Optional[str] = None
-    content: Optional[str] = None
-    category: Optional[str] = None
-    tags: Optional[list[str]] = None
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    title: str | None = PydanticField(default=None, min_length=3, max_length=100)
+    content: str | None = PydanticField(default=None, min_length=1, max_length=10_000)
+    category: str | None = PydanticField(default=None, min_length=2, max_length=30, pattern=r"^[a-z]+$")
+    tags: list[str] | None = PydanticField(default=None, max_length=10)
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def validate_category(cls, value) -> str | None:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            value = value.strip().lower()
+        if value not in ALLOWED_CATEGORIES:
+            raise ValueError(
+                f"category must be one of {sorted(ALLOWED_CATEGORIES)}"
+            )
+        return value
+
+    @field_validator("tags")
+    @classmethod
+    def clean_tags(cls, raw) -> list[str] | None:
+        if raw is None:
+            return None
+        cleaned = []
+        seen: set[str] = set()
+        for tag in raw:
+            t = tag.strip().lower()
+            if not t:
+                raise ValueError("tags must not be empty strings")
+            if len(t) < 2:
+                raise ValueError(f"tag '{t}' must be at least 2 characters")
+            if t in seen:
+                continue
+            seen.add(t)
+            cleaned.append(t)
+        return cleaned
 
 
-# ============================================================================
-# HELPER
-# ============================================================================
 
 def get_or_create_tags(tag_names: list[str], session: Session) -> list[Tag]:
     """Normalize tag names and return Tag objects, creating new ones as needed."""
@@ -134,10 +241,6 @@ app = FastAPI(
 )
 
 
-# ============================================================================
-# BASIC ENDPOINTS
-# ============================================================================
-
 @app.get("/")
 def root():
     return {"message": "Hello World"}
@@ -178,13 +281,9 @@ def get_student():
     }
 
 
-# ============================================================================
-# NOTES ENDPOINTS
-# ============================================================================
 
 @app.post("/notes", status_code=201)
 def create_note(note: NoteCreate, session: SessionDep) -> NoteResponse:
-    """Create a new note."""
     db_note = Note(title=note.title, content=note.content, category=note.category)
     db_note.tags = get_or_create_tags(note.tags, session)
     session.add(db_note)
@@ -287,7 +386,7 @@ def partial_update_note(note_id: int, note_update: NoteUpdate, session: SessionD
     if not note:
         raise HTTPException(status_code=404, detail=f"Note with ID {note_id} not found")
 
-    update_data = note_update.dict(exclude_unset=True)
+    update_data = note_update.model_dump(exclude_unset=True)
 
     if "tags" in update_data:
         note.tags = get_or_create_tags(update_data.pop("tags"), session)

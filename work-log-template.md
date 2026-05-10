@@ -206,28 +206,32 @@ Optional[str] statt str = None für Query-Parameter; col() für SQLModel-Joins; 
 ### Day 5
 
 #### 1. ✅ What did I accomplish?
-
-
-
-
+Strikte Schemas umgesetzt: `NoteCreate` und `NoteUpdate` mit Pydantic aufgebaut, inkl. Sperre für unbekannte Felder über `extra="forbid"`
+Feld Validierung und Normalisierung ergänzt: Längenregeln definiert sowie automatische Bereinigung mit strip/lowercase für category und tags
+Whitelist-Konzept angewendet: `ALLOWED_CATEGORIES` eingeführt und Kategorien darauf geprüft
+Cross Field Validierung umgesetzt: per `@model_validator(mode="after")` erzwungen, dass work Notizen auch das work Tag enthalten
+Tag Modell gehärtet: Name Validierung auf lowercase Buchstaben, Zahlen und Bindestrich sowie zusätzlicher Längenprüfung
+Pydantic v2 Standards angewendet: `ConfigDict` genutzt und `.dict()` auf `.model_dump()` umgestellt
+Validierung mit Tests abgesichert: `test_validation.py` mit 8 gezielten Tests (TestClient + In Memory SQLite, ohne laufenden Server)
+Bestehende API Tests kompatibel gemacht: `test_notes.py` auf gültige Kategorien aus `ALLOWED_CATEGORIES` angepasst
 
 
 ---
 
 #### 2. 🚧 What challenges did I face?
-
-
-
-
+Validierungscode ohne Vorlesung verstehen (Arbeit ging vor)
+`sqlmodel.Field` akzeptiert Pydantic-Parameter wie `pattern` nicht -> `TypeError`
+Zwei Funktions-Bodies (`statement = select(Note)`, `notes = session.exec(...)`) beim Restore gelöscht
+`test_notes.py` vollständig rot: alte Testkategorien ("Testing", "FilterWork") jetzt ungültig
 
 
 ---
 
 #### 3. 💡 How did I overcome them?
-
-
-
-
+Kommilitonen gefragt, Vorlesungsfolien nachgelesen
+`pydantic.Field as PydanticField` für BaseModels importiert, `sqlmodel.Field` für Tabellen-Modelle separat genutzt
+Fehler mit `get_errors`-Tool identifiziert, fehlende Zeilen manuell wiederhergestellt
+Alle Testkategorien konsistent auf `ALLOWED_CATEGORIES`-Werte umgestellt
 
 
 ---
