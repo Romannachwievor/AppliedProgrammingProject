@@ -274,29 +274,30 @@ Automatische Skip Regeln in serverabhängigen Testdateien eingebaut, damit Tests
 ### Day 7
 
 #### 1. ✅ What did I accomplish?
-
-
-
-
-
+Streamlit als Frontend Tool eingerichtet und erste App erstellt
+No API Test Teil umgesetzt (Button sendet Request an no as a service und zeigt Antwort)
+frontend.py für Notes API erstellt
+Funktion 1 umgesetzt: Alle Notes laden und Titel in Liste anzeigen
+Detailansicht für ausgewählte Note ergänzt (Titel, Inhalt, Kategorie, Tags)
+Funktion 2 umgesetzt: Neue Note über Formular anlegen (Titel, Inhalt, Kategorie, Tags)
+Nach dem Erstellen erneut geladen, damit neue Notes direkt in der Liste erscheinen
+Session State Anzeige über Expander ergänzt
 
 ---
 
 #### 2. 🚧 What challenges did I face?
-
-
-
-
+Streamlit war anfangs nicht in der aktiven Umgebung verfügbar
+Fehlerbehandlung für API Requests in der UI fehlte zuerst
+Tags Eingabe aus Textfeld musste sauber in Liste umgewandelt werden
 
 
 ---
 
 #### 3. 💡 How did I overcome them?
-
-
-
-
-
+streamlit direkt in die aktive .venv installiert
+Requests mit try/except abgesichert und Fehlermeldungen im UI angezeigt
+Hilfsfunktion für Tag Parsing eingebaut (Komma getrennte Eingabe -> Liste)
+Frontend mit laufender FastAPI getestet und Formular mit st.form umgesetzt
 
 ---
 
