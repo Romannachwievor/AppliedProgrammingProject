@@ -264,12 +264,12 @@ def test_list_categories():
 
 def test_notes_by_category_endpoint():
     """Test GET /categories/{category}/notes returns only matching notes."""
-    create_test_note(title="CatRoute Note", category="CatRouteTest", tags=[])
+    create_test_note(title="CatRoute Note", category="ideas", tags=[])
 
-    response = requests.get(f"{BASE_URL}/categories/CatRouteTest/notes")
+    response = requests.get(f"{BASE_URL}/categories/ideas/notes")
 
     assert response.status_code == 200
     notes = response.json()
     assert len(notes) >= 1
     for note in notes:
-        assert note["category"] == "CatRouteTest"
+        assert note["category"] == "ideas"
