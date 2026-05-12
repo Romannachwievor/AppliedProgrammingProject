@@ -8,11 +8,10 @@ Notes-Management-Projekt aus dem Applied-Programming-Kurs mit:
 
 ## Projektstruktur
 
-- `exploration/main.py`: Hauptimplementierung der FastAPI-Anwendung
-- `main.py`: Kompatibler Einstiegspunkt
+- `main.py`: Hauptimplementierung der FastAPI-Anwendung
 - `frontend.py`: Streamlit-Frontend
 - `notes.db`: SQLite-Datenbank
-- `test_*.py`: Test-Suiten
+- `exploration/test_*.py`: Test-Suiten
 
 ## Voraussetzungen
 
@@ -23,7 +22,7 @@ Notes-Management-Projekt aus dem Applied-Programming-Kurs mit:
 
 ```bash
 git clone https://github.com/Romannachwievor/AppliedProgrammingProject.git
-cd AppliedProgrammingProject/AppliedProgrammingProject
+cd AppliedProgrammingProject
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
 ```
@@ -32,7 +31,7 @@ Alternative mit venv + pip:
 
 ```bash
 git clone https://github.com/Romannachwievor/AppliedProgrammingProject.git
-cd AppliedProgrammingProject/AppliedProgrammingProject
+cd AppliedProgrammingProject
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
