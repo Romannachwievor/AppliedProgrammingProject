@@ -47,7 +47,7 @@ pip install -e .
 uv run fastapi dev main.py
 ```
 
-Backend laeuft dann unter:
+Backend läuft dann unter:
 
 - http://127.0.0.1:8000
 - Swagger UI: http://127.0.0.1:8000/docs
@@ -71,7 +71,7 @@ import requests
 
 payload = {
 	"title": "Sprint Planning",
-	"content": "Backlog fuer naechste Woche priorisieren",
+	"content": "Backlog für nächste Woche priorisieren",
 	"category": "work",
 	"tags": ["planning", "team"],
 }
@@ -107,7 +107,7 @@ res.raise_for_status()
 print(res.json())
 ```
 
-## Tests ausfuehren
+## Tests ausführen
 
 ```bash
 uv run pytest -q
